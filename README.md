@@ -14,6 +14,19 @@ A **real-world production-grade reinforcement learning environment** for data ce
 - Natural testbed for RL agents learning operational policies
 - Extends to real-world problems: Kubernetes scheduling, batch processing, edge computing
 
+## 📁 Project Structure
+
+```
+job-scheduling-env/
+├── job_scheduling_env.py      # Core environment (typed models + API)
+├── task_graders.py             # Task definitions & agent graders
+├── baseline_inference.py        # Baseline agents & evaluation script
+├── openenv.yaml                 # OpenEnv specification
+├── requirements.txt             # Python dependencies
+├── Dockerfile                   # HuggingFace Spaces deployment
+└── README.md                    # This file
+```
+
 ## 📋 Environment Specification (OpenEnv v1.0)
 
 ### State Space (Observation)
@@ -289,32 +302,6 @@ class TaskGrader:
     # - feedback: str
 ```
 
-## 📁 Project Structure
-
-```
-job-scheduling-env/
-├── job_scheduling_env.py      # Core environment (typed models + API)
-├── task_graders.py             # Task definitions & agent graders
-├── baseline_inference.py        # Baseline agents & evaluation script
-├── openenv.yaml                 # OpenEnv specification
-├── requirements.txt             # Python dependencies
-├── Dockerfile                   # HuggingFace Spaces deployment
-└── README.md                    # This file
-```
-
-## 🚀 Deployment (HuggingFace Spaces)
-
-### Option 1: Docker
-1. Push files to repo
-2. Create new Space on HuggingFace
-3. Select "Docker" runtime
-4. Connect repo
-5. Automatic deployment
-
-### Option 2: Direct Python
-1. Upload files to HuggingFace Space
-2. Create `app.py` that calls `baseline_inference.py`
-3. Set up Gradio interface (optional)
 
 ## 🎯 Key Features
 
@@ -388,26 +375,3 @@ For issues or questions:
   - HuggingFace Spaces ready
 
 ---
-
-**Built for practical RL agent evaluation and production deployment** 🚀
-
-Git Bash / WSL:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-```
-
-3) Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-4) Deactivate when done:
-
-```bash
-deactivate
-```
-
-If `python` is not found, install Python and try again. If you want, I can install packages from `requirements.txt` after you confirm.
