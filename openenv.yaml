@@ -1,0 +1,219 @@
+name: "JobSchedulingEnv-v1"
+version: "1.0.0"
+description: "Real-world job scheduling optimization environment for data center workload management"
+
+# Environment metadata
+metadata:
+  author: "AI Agent Lab"
+  license: "Apache 2.0"
+  tags:
+    - operations-research
+    - scheduling
+    - resource-optimization
+    - reinforcement-learning
+  domain: "Operations Research"
+  task_type: "Sequential Decision Making"
+
+# Observation space
+observation_space:
+  type: "Composite"
+  components:
+    queue_size:
+      type: "integer"
+      description: "Number of jobs waiting in queue"
+      bounds: [0, 20]
+    
+    current_time:
+      type: "float"
+      description: "Current simulation time in steps"
+      bounds: [0, 100]
+    
+    available_resources:
+      type: "object"
+      description: "Current system resource availability"
+      properties:
+        available_cpu:
+          type: "integer"
+          description: "Available CPU cores"
+          bounds: [0, 16]
+        available_memory:
+          type: "integer"
+          description: "Available memory in GB"
+          bounds: [0, 32]
+    
+    job_queue:
+      type: "array"
+      description: "Jobs waiting for scheduling"
+      items:
+        type: "object"
+        properties:
+          job_id: { type: "integer" }
+          cpu_required: { type: "integer", bounds: [1, 16] }
+          memory_required: { type: "integer", bounds: [1, 32] }
+          duration: { type: "integer", bounds: [5, 20] }
+          priority: { type: "integer", bounds: [1, 5] }
+          arrival_time: { type: "float" }
+    
+    running_jobs:
+      type: "object"
+      description: "Currently executing jobs"
+      properties:
+        job_id: { type: "integer" }
+    
+    completed_jobs:
+      type: "integer"
+      description: "Total jobs completed so far"
+
+# Action space
+action_space:
+  type: "discrete"
+  description: "Index of job to schedule from queue, or -1 to skip scheduling"
+  bounds: [-1, 20]
+  semantics:
+    -1: "Skip scheduling (no job scheduled)"
+    "0-19": "Schedule job at specified queue index"
+
+# Reward structure
+reward:
+  type: "float"
+  range: [-1.0, 1.0]
+  description: "Composite reward based on scheduling efficiency"
+  components:
+    - name: "scheduling_reward"
+      weight: 0.2
+      description: "Reward for successfully scheduling a job"
+    
+    - name: "completion_reward"
+      weight: 0.5
+      description: "Reward for job completion (higher for faster completion)"
+    
+    - name: "efficiency_penalty"
+      weight: 0.2
+      description: "Penalty for queue buildup and idle resources"
+    
+    - name: "utilization_bonus"
+      weight: 0.1
+      description: "Bonus for high resource utilization (>70%)"
+
+# Episode configuration
+episode:
+  max_steps: 100
+  reset_required: true
+  termination_condition: "max_steps_reached"
+
+# Environment parameters
+parameters:
+  num_cpus:
+    type: "integer"
+    default: 16
+    description: "Total CPU cores available"
+  
+  num_memory:
+    type: "integer"
+    default: 32
+    description: "Total memory in GB"
+  
+  queue_max_size:
+    type: "integer"
+    default: 20
+    description: "Maximum queue size"
+  
+  episode_length:
+    type: "integer"
+    default: 100
+    description: "Steps per episode"
+
+# API methods
+api:
+  - name: "reset"
+    description: "Reset environment to initial state"
+    returns: "ObservationSpace"
+  
+  - name: "step"
+    description: "Execute one environment step"
+    parameters:
+      - name: "action"
+        type: "integer"
+        description: "Job queue index to schedule"
+    returns: "StepReturn (observation, reward, done, truncated, info)"
+  
+  - name: "state"
+    description: "Get current state without stepping"
+    returns: "ObservationSpace"
+  
+  - name: "get_metrics"
+    description: "Get episode performance metrics"
+    returns: "Dict with throughput, latency, utilization"
+
+# Tasks
+tasks:
+  - id: "easy"
+    name: "Easy: Small Queue Management"
+    description: "Minimize average job completion time with 5-10 jobs per episode"
+    parameters:
+      size: "small"
+      queue_max_size: 10
+      episode_length: 50
+    success_criteria:
+      min_completed_jobs: 5
+      max_avg_completion_time: 20
+    solver_benchmark: 0.7
+  
+  - id: "medium"
+    name: "Medium: Balanced Load Scheduling"
+    description: "Optimize throughput while maintaining fairness with 20 jobs"
+    parameters:
+      size: "medium"
+      queue_max_size: 20
+      episode_length: 100
+    success_criteria:
+      min_completed_jobs: 15
+      min_throughput: 0.15
+      max_avg_wait_time: 15
+    solver_benchmark: 0.65
+  
+  - id: "hard"
+    name: "Hard: Peak Load Management"
+    description: "Handle variable, high-load scheduling with resource contention"
+    parameters:
+      size: "large"
+      queue_max_size: 30
+      episode_length: 150
+      variable_load: true
+    success_criteria:
+      min_completed_jobs: 25
+      min_throughput: 0.18
+      max_cpu_idle_time: 0.2
+      max_queue_size: 25
+    solver_benchmark: 0.60
+
+# Metrics to track
+metrics:
+  - name: "throughput"
+    description: "Jobs completed per time unit"
+    type: "float"
+  
+  - name: "avg_completion_time"
+    description: "Average time from arrival to completion"
+    type: "float"
+  
+  - name: "avg_wait_time"
+    description: "Average time spent waiting in queue"
+    type: "float"
+  
+  - name: "resource_utilization"
+    description: "Average CPU and memory utilization"
+    type: "float"
+  
+  - name: "queue_length_max"
+    description: "Maximum queue size during episode"
+    type: "integer"
+
+# Reproducibility
+reproducibility:
+  seed_support: true
+  deterministic: true
+  random_elements:
+    - "job_arrival_times"
+    - "job_characteristics"
+    - "job_priorities"
